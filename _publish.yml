@@ -1,0 +1,4 @@
+- source: hello.qmd
+  quarto-pub:
+    - id: 3197613f-dd94-4830-ab6b-914f6be1d3f0
+      url: https://ularkadut.quarto.pub/quarto-basics
