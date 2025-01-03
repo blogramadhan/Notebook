@@ -1,0 +1,4 @@
+- source: dashboard.qmd
+  quarto-pub:
+    - id: 325d0832-5a6d-44e4-bece-9f7c151d94bc
+      url: https://ularkadut.quarto.pub/airbnb-dashboard

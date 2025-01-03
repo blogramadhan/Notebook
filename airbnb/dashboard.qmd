@@ -38,12 +38,12 @@ dict(
 
 ```{python}
 #| content: valuebox
-#| title: "Average Review Rating"
+#| title: "Number of Reviews"
 
 dict(
-    icon = "star",
+    icon = "person",
     color = "secondary",
-    value = f"{reviews['overall'].mean():.2f}"
+    value = len(reviews)
 )
 ```
 
