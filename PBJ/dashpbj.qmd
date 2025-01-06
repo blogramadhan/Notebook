@@ -16,18 +16,18 @@ def format_rupiah(x):
 con = duckdb.connect(database=':memory:')
 
 ## Akses Dataset (PARQUET)
-DatasetRUPPP2025 = "https://data.pbj.my.id/D197/sirup/RUP-PaketPenyedia-Terumumkan2025.parquet"
-DatasetRUPPS2025 = "https://data.pbj.my.id/D197/sirup/RUP-PaketSwakelola-Terumumkan2025.parquet"
-DatasetRUPSA2025 = "https://data.pbj.my.id/D197/sirup/RUP-StrukturAnggaranPD2025.parquet"
+DatasetRUPPP2025 = "./data/RUP-PaketPenyedia-Terumumkan2025.json"
+DatasetRUPPS2025 = "./data/RUP-PaketSwakelola-Terumumkan2025.json"
+DatasetRUPSA2025 = "./data/RUP-StrukturAnggaranPD2025.json"
 
 ## Dataset RUP Paket Penyedia
-df_RUPPP = pd.read_parquet(DatasetRUPPP2025)
+df_RUPPP = pd.read_json(DatasetRUPPP2025)
 df_RUPPP_Umumkan = con.execute("SELECT * FROM df_RUPPP WHERE status_umumkan_rup = 'Terumumkan' AND status_aktif_rup = 'TRUE' AND metode_pengadaan <> '0'").df()
 df_RUPPP_Umumkan_ukm = con.execute("SELECT * FROM df_RUPPP_Umumkan WHERE status_ukm = 'UKM'").df()
 df_RUPPP_Umumkan_pdn = con.execute("SELECT * FROM df_RUPPP_Umumkan WHERE status_pdn = 'PDN'").df()
 
 ## Dataset RUP Paket Swakelola
-df_RUPPS = pd.read_parquet(DatasetRUPPS2025)
+df_RUPPS = pd.read_json(DatasetRUPPS2025)
 RUPPS_umumkan_sql = """
     SELECT nama_satker, kd_rup, nama_paket, pagu, tipe_swakelola, volume_pekerjaan, uraian_pekerjaan, 
         tgl_pengumuman_paket, tgl_awal_pelaksanaan_kontrak, nama_ppk, status_umumkan_rup
@@ -37,7 +37,7 @@ RUPPS_umumkan_sql = """
 df_RUPPS_Umumkan = con.execute(RUPPS_umumkan_sql).df()
 
 ## Dataset RUP Struktur Anggaran
-df_RUPSA = pd.read_parquet(DatasetRUPSA2025)
+df_RUPSA = pd.read_json(DatasetRUPSA2025)
 ```
 
 # Persen RUP

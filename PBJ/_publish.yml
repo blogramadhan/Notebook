@@ -1,0 +1,4 @@
+- source: dashpbj.qmd
+  quarto-pub:
+    - id: 064e8250-2fc1-448c-8f00-ee30d75bdd44
+      url: https://ularkadut.quarto.pub/pbj-prov-kalbar
