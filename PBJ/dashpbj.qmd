@@ -1,0 +1,66 @@
+---
+title: "PBJ Prov. Kalbar"
+format: dashboard
+embed-resources: true
+---
+
+```{python}
+import pandas as pd
+import duckdb
+import itables
+import itables.options as opt
+
+def format_rupiah(x):
+    return "Rp {:,.0f}".format(x)
+
+con = duckdb.connect(database=':memory:')
+
+## Akses Dataset (PARQUET)
+DatasetRUPPP2025 = "https://data.pbj.my.id/D197/sirup/RUP-PaketPenyedia-Terumumkan2025.parquet"
+DatasetRUPPS2025 = "https://data.pbj.my.id/D197/sirup/RUP-PaketSwakelola-Terumumkan2025.parquet"
+DatasetRUPSA2025 = "https://data.pbj.my.id/D197/sirup/RUP-StrukturAnggaranPD2025.parquet"
+
+## Dataset RUP Paket Penyedia
+df_RUPPP = pd.read_parquet(DatasetRUPPP2025)
+df_RUPPP_Umumkan = con.execute("SELECT * FROM df_RUPPP WHERE status_umumkan_rup = 'Terumumkan' AND status_aktif_rup = 'TRUE' AND metode_pengadaan <> '0'").df()
+df_RUPPP_Umumkan_ukm = con.execute("SELECT * FROM df_RUPPP_Umumkan WHERE status_ukm = 'UKM'").df()
+df_RUPPP_Umumkan_pdn = con.execute("SELECT * FROM df_RUPPP_Umumkan WHERE status_pdn = 'PDN'").df()
+
+## Dataset RUP Paket Swakelola
+df_RUPPS = pd.read_parquet(DatasetRUPPS2025)
+RUPPS_umumkan_sql = """
+    SELECT nama_satker, kd_rup, nama_paket, pagu, tipe_swakelola, volume_pekerjaan, uraian_pekerjaan, 
+        tgl_pengumuman_paket, tgl_awal_pelaksanaan_kontrak, nama_ppk, status_umumkan_rup
+        FROM df_RUPPS
+        WHERE status_umumkan_rup = 'Terumumkan'
+"""
+df_RUPPS_Umumkan = con.execute(RUPPS_umumkan_sql).df()
+
+## Dataset RUP Struktur Anggaran
+df_RUPSA = pd.read_parquet(DatasetRUPSA2025)
+```
+
+# Persen RUP
+
+## Tabel Persen RUP
+```{python}
+ir_strukturanggaran = con.execute("SELECT nama_satker AS NAMA_SATKER, belanja_pengadaan AS STRUKTUR_ANGGARAN FROM df_RUPSA WHERE STRUKTUR_ANGGARAN > 0").df()
+ir_paketpenyedia = con.execute("SELECT nama_satker AS NAMA_SATKER, SUM(pagu) AS RUP_PENYEDIA FROM df_RUPPP_Umumkan GROUP BY NAMA_SATKER").df()
+ir_paketswakelola = con.execute("SELECT nama_satker AS NAMA_SATKER, SUM(pagu) AS RUP_SWAKELOLA FROM df_RUPPS_Umumkan GROUP BY NAMA_SATKER").df()   
+
+ir_gabung = pd.merge(pd.merge(ir_strukturanggaran, ir_paketpenyedia, how='left', on='NAMA_SATKER'), ir_paketswakelola, how='left', on='NAMA_SATKER')
+ir_gabung_totalrup = ir_gabung.assign(TOTAL_RUP = lambda x: x.RUP_PENYEDIA + x.RUP_SWAKELOLA)
+ir_gabung_selisih = ir_gabung_totalrup.assign(SELISIH = lambda x: x.STRUKTUR_ANGGARAN - x.RUP_PENYEDIA - x.RUP_SWAKELOLA) 
+ir_gabung_final = ir_gabung_selisih.assign(PERSEN = lambda x: round(((x.RUP_PENYEDIA + x.RUP_SWAKELOLA) / x.STRUKTUR_ANGGARAN * 100), 2)).fillna(0)
+ir_gabung_final["STRUKTUR_ANGGARAN"] = ir_gabung_final["STRUKTUR_ANGGARAN"].apply(format_rupiah)
+ir_gabung_final["RUP_PENYEDIA"] = ir_gabung_final["RUP_PENYEDIA"].apply(format_rupiah)
+ir_gabung_final["RUP_SWAKELOLA"] = ir_gabung_final["RUP_SWAKELOLA"].apply(format_rupiah)
+ir_gabung_final["TOTAL_RUP"] = ir_gabung_final["TOTAL_RUP"].apply(format_rupiah)
+ir_gabung_final["SELISIH"] = ir_gabung_final["SELISIH"].apply(format_rupiah)
+
+display_cols = ["NAMA_SATKER", "STRUKTUR_ANGGARAN", "RUP_PENYEDIA", "RUP_SWAKELOLA", "TOTAL_RUP", "SELISIH", "PERSEN"]
+itables.show(ir_gabung_final[display_cols])
+
+```
+
+
