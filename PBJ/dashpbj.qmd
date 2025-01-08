@@ -1,14 +1,15 @@
 ---
 title: "PBJ Prov. Kalbar"
-format: dashboard
+format: 
+    dashboard:
+        theme: darkly
 embed-resources: true
 ---
 
 ```{python}
 import pandas as pd
 import duckdb
-import itables
-import itables.options as opt
+from itables import show
 
 def format_rupiah(x):
     return "Rp {:,.0f}".format(x)
@@ -42,8 +43,10 @@ df_RUPSA = pd.read_json(DatasetRUPSA2025)
 
 # Persen RUP
 
-## Tabel Persen RUP
+## Tabel 1
 ```{python}
+#| title: Persen RUP
+
 ir_strukturanggaran = con.execute("SELECT nama_satker AS NAMA_SATKER, belanja_pengadaan AS STRUKTUR_ANGGARAN FROM df_RUPSA WHERE STRUKTUR_ANGGARAN > 0").df()
 ir_paketpenyedia = con.execute("SELECT nama_satker AS NAMA_SATKER, SUM(pagu) AS RUP_PENYEDIA FROM df_RUPPP_Umumkan GROUP BY NAMA_SATKER").df()
 ir_paketswakelola = con.execute("SELECT nama_satker AS NAMA_SATKER, SUM(pagu) AS RUP_SWAKELOLA FROM df_RUPPS_Umumkan GROUP BY NAMA_SATKER").df()   
@@ -52,15 +55,15 @@ ir_gabung = pd.merge(pd.merge(ir_strukturanggaran, ir_paketpenyedia, how='left',
 ir_gabung_totalrup = ir_gabung.assign(TOTAL_RUP = lambda x: x.RUP_PENYEDIA + x.RUP_SWAKELOLA)
 ir_gabung_selisih = ir_gabung_totalrup.assign(SELISIH = lambda x: x.STRUKTUR_ANGGARAN - x.RUP_PENYEDIA - x.RUP_SWAKELOLA) 
 ir_gabung_final = ir_gabung_selisih.assign(PERSEN = lambda x: round(((x.RUP_PENYEDIA + x.RUP_SWAKELOLA) / x.STRUKTUR_ANGGARAN * 100), 2)).fillna(0)
-ir_gabung_final["STRUKTUR_ANGGARAN"] = ir_gabung_final["STRUKTUR_ANGGARAN"].apply(format_rupiah)
-ir_gabung_final["RUP_PENYEDIA"] = ir_gabung_final["RUP_PENYEDIA"].apply(format_rupiah)
-ir_gabung_final["RUP_SWAKELOLA"] = ir_gabung_final["RUP_SWAKELOLA"].apply(format_rupiah)
-ir_gabung_final["TOTAL_RUP"] = ir_gabung_final["TOTAL_RUP"].apply(format_rupiah)
-ir_gabung_final["SELISIH"] = ir_gabung_final["SELISIH"].apply(format_rupiah)
+
+columns_to_format = ["STRUKTUR_ANGGARAN", "RUP_PENYEDIA", "RUP_SWAKELOLA", "TOTAL_RUP", "SELISIH"]
+for col in columns_to_format:
+    ir_gabung_final[col] = ir_gabung_final[col].apply(format_rupiah)
 
 display_cols = ["NAMA_SATKER", "STRUKTUR_ANGGARAN", "RUP_PENYEDIA", "RUP_SWAKELOLA", "TOTAL_RUP", "SELISIH", "PERSEN"]
-itables.show(ir_gabung_final[display_cols])
 
+show(ir_gabung_final[display_cols])
 ```
 
+# Laporan Kinerja
 

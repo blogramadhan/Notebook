@@ -1,0 +1,213 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "---\n",
+        "title: \"Customer Churn\"\n",
+        "format: dashboard\n",
+        "logo: images/logo.png\n",
+        "theme: custom.scss\n",
+        "---"
+      ],
+      "id": "eb135bd8"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "tags": [
+          "parameters"
+        ]
+      },
+      "source": [
+        "# to render w/ a different product type:\n",
+        "# quarto render dashboard.qmd -P product_type:Premium\n",
+        "\n",
+        "product_type = \"Standard\""
+      ],
+      "id": "8d69a28b",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "import pandas as pd\n",
+        "from helpers import color_palette, plot_churn_reason, plot_contract_type, table_purchases\n",
+        "from matplotlib import rcParams\n",
+        "from itables import show\n",
+        "\n",
+        "rcParams.update({\"savefig.bbox\": \"tight\"})\n",
+        "\n",
+        "churn = pd.read_csv(\"data/churn.csv\")\n",
+        "churn_reason = pd.read_csv(\"data/churn_reason.csv\")\n",
+        "purchase_characteristics = pd.read_csv(\"data/purchase_characteristics.csv\")"
+      ],
+      "id": "8707addb",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# Churn (`{python} product_type`)\n",
+        "\n",
+        "## Row\n"
+      ],
+      "id": "9f350ca8"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "content": "valuebox",
+        "title": "Churn rate 2022"
+      },
+      "source": [
+        "dict(\n",
+        "  icon = \"archive\",\n",
+        "  color = \"light\",\n",
+        "  value = \"17%\"\n",
+        ")"
+      ],
+      "id": "e3eea1b4",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "content": "valuebox",
+        "title": "Current churn rate"
+      },
+      "source": [
+        "dict(\n",
+        "  icon = \"graph-down\",\n",
+        "  color = \"light\",\n",
+        "  value = \"14%\"\n",
+        ")"
+      ],
+      "id": "3a2ef499",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "content": "valuebox",
+        "title": "Churn rate goal"
+      },
+      "source": [
+        "dict(\n",
+        "  icon = \"bullseye\",\n",
+        "  color = \"warning\",\n",
+        "  value = \"10%\"\n",
+        ")"
+      ],
+      "id": "ec67bd1a",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Row {height=\"60%\"}\n"
+      ],
+      "id": "0bb2cf1c"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "title": "Reason for churn by quarter"
+      },
+      "source": [
+        "plot_churn_reason(churn_reason, product_type)"
+      ],
+      "id": "7e53bfe1",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "title": "Churn by contract type and days since purchase"
+      },
+      "source": [
+        "plot_contract_type(churn, product_type)"
+      ],
+      "id": "d6875c06",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Row\n"
+      ],
+      "id": "0126afd5"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "title": "Purchase characteristics"
+      },
+      "source": [
+        "from IPython.display import Markdown\n",
+        "characteristics = table_purchases(purchase_characteristics, product_type)\n",
+        "Markdown(characteristics.to_markdown(index = False))"
+      ],
+      "id": "91726c62",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# Data \n"
+      ],
+      "id": "b9834b1f"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "title": "Churn Reason"
+      },
+      "source": [
+        "show(churn_reason[churn_reason[\"product\"]==product_type])"
+      ],
+      "id": "e25ec9fd",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "title": "Contracts by State"
+      },
+      "source": [
+        "show(churn[churn['product'] == product_type]\n",
+        "  .groupby(['contract', 'state'])\n",
+        "  .size()\n",
+        "  .reset_index(name='count'))"
+      ],
+      "id": "a24b570b",
+      "execution_count": null,
+      "outputs": []
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "name": "python3",
+      "language": "python",
+      "display_name": "Python 3 (ipykernel)",
+      "path": "d:\\Coding\\Ngoprek\\Notebook\\.venv\\share\\jupyter\\kernels\\python3"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+}
